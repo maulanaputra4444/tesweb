@@ -3,9 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Styled Box</title>
+    <title>Working Button Example</title>
     <style>
-        /* --- THIS IS THE CSS (The "Make it Pretty" part) --- */
         body {
             background-color: #f4f7f6;
             display: flex;
@@ -13,7 +12,7 @@
             align-items: center;
             height: 100vh;
             margin: 0;
-            font-family: 'Arial', sans-serif;
+            font-family: sans-serif;
         }
 
         .card {
@@ -22,42 +21,52 @@
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             text-align: center;
-            max-width: 300px;
-            border-top: 5px solid #4A90E2; /* Adds a nice blue accent line */
-        }
-
-        h1 {
-            color: #333;
-            font-size: 24px;
-            margin-bottom: 10px;
-        }
-
-        p {
-            color: #777;
-            font-size: 14px;
-            line-height: 1.6;
+            width: 300px;
         }
 
         .button {
             display: inline-block;
             margin-top: 20px;
-            padding: 10px 25px;
+            padding: 12px 24px;
             background-color: #4A90E2;
             color: white;
             text-decoration: none;
             border-radius: 25px;
             font-weight: bold;
+            cursor: pointer;
+            border: none;
             transition: 0.3s;
         }
 
         .button:hover {
             background-color: #357ABD;
-            transform: scale(1.05);
         }
     </style>
 </head>
+<body>
+
+    <div class="card">
+        <h1>Hello!</h1>
+        <p>Click the button below to test the JavaScript.</p>
+        <button class="button" id="testBtn">Get Started</button>
+    </div>
+
+    <script>
+        // This is the JavaScript
+        const myButton = document.getElementById('testBtn');
+
+        myButton.addEventListener('click', function() {
+            // 1. Show an alert
+            alert("Success! The JavaScript is linked and working.");
+
+            // 2. Change the page background color just for fun
+            document.body.style.backgroundColor = "#e1f5fe";
+
+            // 3. Change the button text
+            this.textContent = "It Works! 🎉";
+            this.style.backgroundColor = "#28a745";
+        });
+    </script>
+
 </body>
-<script src="script.js"></script>
-</body>
-</html>
 </html>
