@@ -1,72 +1,208 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Working Button Example</title>
+    <title>Logic Maze - Gamification</title>
     <style>
-        body {
-            background-color: #f4f7f6;
+        :root {
+            --bg-color: #f4f4f4;
+            --wall-color: #222;
+            --path-color: #fff;
+            --start-color: #3498db;
+            --goal-color: #2ecc71;
+            --border-color: #ccc;
+        }
+
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; display: flex; flex-direction: column; align-items: center; background: var(--bg-color); }
+        h1 { margin: 20px 0 5px; color: #333; }
+        .subtitle { color: #666; margin-bottom: 20px; font-size: 0.9rem; }
+
+        /* Maze Grid */
+        #maze-container {
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(10, 40px);
+            grid-template-rows: repeat(10, 40px);
+            border: 5px solid var(--wall-color);
+            background: var(--path-color);
+        }
+
+        .cell { width: 40px; height: 40px; box-sizing: border-box; border: 0.1px solid #eee; }
+        .wall { background-color: var(--wall-color); }
+        .start { background-color: #e3f2fd; border: 2px solid var(--start-color); }
+        .goal { background-color: #e8f5e9; border: 2px solid var(--goal-color); }
+
+        /* Stickman Styling */
+        #stickman {
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            transition: all 0.3s ease;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
-            margin: 0;
-            font-family: sans-serif;
+            z-index: 10;
         }
 
-        .card {
-            background: white;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            text-align: center;
-            width: 300px;
+        /* Controls */
+        .controls-wrapper { margin-top: 20px; width: 400px; }
+        .legend { display: flex; justify-content: space-around; margin-bottom: 10px; font-size: 0.8rem; }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .box { width: 15px; height: 15px; border-radius: 2px; }
+
+        textarea {
+            width: 100%;
+            height: 150px;
+            padding: 10px;
+            border-radius: 8px;
+            border: 2px solid var(--border-color);
+            font-family: monospace;
+            resize: none;
+            box-sizing: border-box;
         }
 
-        .button {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 12px 24px;
-            background-color: #4A90E2;
-            color: white;
-            text-decoration: none;
-            border-radius: 25px;
-            font-weight: bold;
-            cursor: pointer;
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        button {
+            flex: 1;
+            padding: 12px;
             border: none;
-            transition: 0.3s;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
-
-        .button:hover {
-            background-color: #357ABD;
-        }
+        #run-btn { background: #333; color: white; }
+        #reset-btn { background: white; border: 2px solid #ccc; }
+        button:active { transform: scale(0.98); }
     </style>
 </head>
 <body>
 
-    <div class="card">
-        <h1>Hello!</h1>
-        <p>Click the button below to test the JavaScript.</p>
-        <button class="button" id="testBtn">Get Started</button>
+    <h1>Logic Maze</h1>
+    <p class="subtitle">Ketik command untuk memandu stickman dari kiri (biru) ke kanan (hijau)</p>
+
+    <div id="maze-container">
+        <div id="stickman">
+            <svg width="30" height="30" viewBox="0 0 100 100">
+                <circle cx="50" cy="20" r="15" fill="#3498db" />
+                <line x1="50" y1="35" x2="50" y2="70" stroke="#3498db" stroke-width="8" />
+                <line x1="50" y1="45" x2="25" y2="60" stroke="#3498db" stroke-width="8" />
+                <line x1="50" y1="45" x2="75" y2="60" stroke="#3498db" stroke-width="8" />
+                <line x1="50" y1="70" x2="30" y2="95" stroke="#3498db" stroke-width="8" />
+                <line x1="50" y1="70" x2="70" y2="95" stroke="#3498db" stroke-width="8" />
+            </svg>
+        </div>
+    </div>
+
+    <div class="controls-wrapper">
+        <div class="legend">
+            <div class="legend-item"><div class="box" style="background:var(--start-color)"></div> Start</div>
+            <div class="legend-item"><div class="box" style="background:var(--wall-color)"></div> Dinding</div>
+            <div class="legend-item"><div class="box" style="background:var(--goal-color)"></div> Goal</div>
+        </div>
+        
+        <textarea id="command-input" placeholder="Contoh:&#10;down&#10;right&#10;right&#10;up"></textarea>
+        
+        <div class="btn-group">
+            <button id="run-btn">▶ Run</button>
+            <button id="reset-btn">↺ Reset</button>
+        </div>
     </div>
 
     <script>
-        // This is the JavaScript
-        const myButton = document.getElementById('testBtn');
+        const mazeContainer = document.getElementById('maze-container');
+        const stickman = document.getElementById('stickman');
+        const input = document.getElementById('command-input');
+        const runBtn = document.getElementById('run-btn');
 
-        myButton.addEventListener('click', function() {
-            // 1. Show an alert
-            alert("Success! The JavaScript is linked and working.");
+        // 0 = Path, 1 = Wall, 2 = Start, 3 = Goal
+        const mazeLayout = [
+            [2, 0, 0, 1, 0, 0, 1, 0, 0, 0],
+            [1, 1, 0, 1, 0, 1, 1, 0, 1, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+            [0, 1, 1, 1, 1, 1, 0, 1, 1, 0],
+            [0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+            [1, 1, 1, 1, 0, 1, 1, 1, 1, 0],
+            [0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+            [0, 1, 0, 1, 1, 1, 1, 1, 1, 0],
+            [0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 1, 1, 1, 1, 1, 1, 1, 1, 3]
+        ];
 
-            // 2. Change the page background color just for fun
-            document.body.style.backgroundColor = "#e1f5fe";
+        let currentPos = { x: 0, y: 0 };
 
-            // 3. Change the button text
-            this.textContent = "It Works! 🎉";
-            this.style.backgroundColor = "#28a745";
-        });
+        // Initialize Maze
+        function initMaze() {
+            mazeContainer.innerHTML = '<div id="stickman">' + stickman.innerHTML + '</div>';
+            mazeLayout.forEach((row, y) => {
+                row.forEach((cell, x) => {
+                    const div = document.createElement('div');
+                    div.className = 'cell';
+                    if (cell === 1) div.classList.add('wall');
+                    if (cell === 2) div.classList.add('start');
+                    if (cell === 3) div.classList.add('goal');
+                    mazeContainer.appendChild(div);
+                });
+            });
+            resetPosition();
+        }
+
+        function resetPosition() {
+            currentPos = { x: 0, y: 0 };
+            updateStickmanUI();
+        }
+
+        function updateStickmanUI() {
+            const stick = document.getElementById('stickman');
+            stick.style.left = (currentPos.x * 40) + 'px';
+            stick.style.top = (currentPos.y * 40) + 'px';
+        }
+
+        async function runCommands() {
+            const commands = input.value.toLowerCase().split('\n').filter(cmd => cmd.trim() !== '');
+            runBtn.disabled = true;
+
+            for (let cmd of commands) {
+                await move(cmd.trim());
+                await new Promise(r => setTimeout(r, 400)); // Step delay
+            }
+            
+            checkWin();
+            runBtn.disabled = false;
+        }
+
+        async function move(direction) {
+            let nextX = currentPos.x;
+            let nextY = currentPos.y;
+
+            if (direction === 'up') nextY--;
+            else if (direction === 'down') nextY++;
+            else if (direction === 'left') nextX--;
+            else if (direction === 'right') nextX++;
+
+            // Collision & Boundary check
+            if (nextY >= 0 && nextY < 10 && nextX >= 0 && nextX < 10 && mazeLayout[nextY][nextX] !== 1) {
+                currentPos.x = nextX;
+                currentPos.y = nextY;
+                updateStickmanUI();
+            } else {
+                console.log("Nabrak dinding!");
+            }
+        }
+
+        function checkWin() {
+            if (mazeLayout[currentPos.y][currentPos.x] === 3) {
+                alert("Hore! Kamu sampai ke Goal! 🎉");
+            }
+        }
+
+        document.getElementById('reset-btn').onclick = resetPosition;
+        runBtn.onclick = runCommands;
+
+        initMaze();
     </script>
-
 </body>
 </html>
